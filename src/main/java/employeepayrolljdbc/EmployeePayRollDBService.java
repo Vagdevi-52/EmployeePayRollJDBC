@@ -2,44 +2,49 @@ package employeepayrolljdbc;
 
 
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Enumeration;
-
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class EmployeePayRollDBService
 {
-	public static void main(String[] args)
+	public List<EmployeePayrollData> readData()
 	{
-		try
+		String sql = "SELECT * FROM employee_payroll;";
+		List<EmployeePayrollData> employeePayrollList = new ArrayList<EmployeePayrollData>();
+		try(Connection connection = this.getConnection();) 
 		{
-			Class.forName("com.mysql.jdbc.Driver");
-		} 
-		catch (ClassNotFoundException e)
+			Statement statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery(sql);
+			while(resultSet.next())
+			{
+				int id = resultSet.getInt("id");
+				String name = resultSet.getString("name");
+				double salary = resultSet.getDouble("salary");
+				LocalDate startDate = resultSet.getDate("start").toLocalDate();
+				employeePayrollList.add(new EmployeePayrollData(id, name, salary,startDate));
+			}
+		}
+		catch (SQLException e)
 		{
 			e.printStackTrace();
 		}
-		ListDrivers();
-		try
-		{
-			Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/payroll_service?useSSL=false"
-				, "root", "Peddamavaya_1952@");
-		} 
-		catch (SQLException e) 
-		{
-			e.printStackTrace();
-		}
-		System.out.println("Connection Done..!!!");
+		return employeePayrollList;
 	}
 
-	private static void ListDrivers()
+	private Connection getConnection() throws SQLException
 	{
-		Enumeration<Driver> driverList=DriverManager.getDrivers();
-		while(driverList.hasMoreElements())
-		{
-			Driver driverClass=(Driver)driverList.nextElement();
-			System.out.println("  "+driverClass.getClass().getName());
-		}
+		String jdbcURL = "jdbc:mysql://localhost:3306/payroll_service?useSSL=false";
+		String userName = "root";
+		String password = "Peddamavaya_1952@";
+		Connection connection;
+		System.out.println("Connecting to database: " + jdbcURL);
+		connection = DriverManager.getConnection(jdbcURL, userName, password);
+		System.out.println("Connection successful: " + connection);
+		return connection;
 	}
 }
